@@ -42,6 +42,14 @@ Rides API allows you to create rider and retrieve them.
                 "driver_vehicle": "Tesla Model 3"
             }
         ]
+        
++ Response 400 (application/json)
+
+        {
+            "error_code": "VALIDATION_ERROR",
+            "message": "Rider name must be a non empty string"
+        }
+
 
 ### List all rides [GET]
 
