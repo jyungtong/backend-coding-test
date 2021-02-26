@@ -1,0 +1,85 @@
+FORMAT: 1A
+HOST: http://127.0.0.1:8010/
+
+# Rides Backend API
+
+Rides API allows you to create rider and retrieve them.
+
+## Health Check [/health]
+
+### Check server health [GET]
+
++ Response 200 (text/plain)
+
+        Healthy
+        
+## Rides [/rides]
+
+### Create a new ride [POST]
+
++ Request (application/json)
+
+        {
+            "start_lat": 3.0468888401012952,
+            "start_long": 101.70134502398477,
+            "end_lat": 3.047938771790838,
+            "end_long": 101.68853469647756,
+            "rider_name": "John Doe",
+            "driver_name": "Bill Gates",
+            "driver_vehicle": "Tesla Model 3"
+        }
+
++ Response 201 (application/json)
+
+        [
+            {
+                "start_lat": 3.0468888401012952,
+                "start_long": 101.70134502398477,
+                "end_lat": 3.047938771790838,
+                "end_long": 101.68853469647756,
+                "rider_name": "John Doe",
+                "driver_name": "Bill Gates",
+                "driver_vehicle": "Tesla Model 3"
+            }
+        ]
+        
++ Response 400 (application/json)
+
+        {
+            "error_code": "VALIDATION_ERROR",
+            "message": "Rider name must be a non empty string"
+        }
+
+
+### List all rides [GET]
+
++ Response 200 (application/json)
+
+        [
+            {
+                "start_lat": 3.0468888401012952,
+                "start_long": 101.70134502398477,
+                "end_lat": 3.047938771790838,
+                "end_long": 101.68853469647756,
+                "rider_name": "John Doe",
+                "driver_name": "Bill Gates",
+                "driver_vehicle": "Tesla Model 3"
+            }
+        ]
+
+
+### Retrieve a ride [GET /rides/{id}]
+
++ Response 200 (application/json)
+
+        [
+            {
+                "start_lat": 3.0468888401012952,
+                "start_long": 101.70134502398477,
+                "end_lat": 3.047938771790838,
+                "end_long": 101.68853469647756,
+                "rider_name": "John Doe",
+                "driver_name": "Bill Gates",
+                "driver_vehicle": "Tesla Model 3"
+            }
+        ]
