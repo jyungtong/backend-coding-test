@@ -82,7 +82,13 @@ module.exports = (db) => {
   });
 
   app.get('/rides', (req, res) => {
-    db.all('SELECT * FROM Rides', (err, rows) => {
+    const MAX_PER_PAGE = 3;
+    const { cursor = 0 } = req.query;
+
+    db.all(`
+    SELECT * FROM Rides
+    WHERE rideID > ${Number(cursor)}
+    limit ${MAX_PER_PAGE}`, (err, rows) => {
       if (err) {
         logger.error(err);
 

@@ -59,7 +59,13 @@ Rides API allows you to create rider and retrieve them.
         }
 
 
-### List all rides [GET]
+### List all rides [GET /rides{?cursor}]
+
++ Parameters
+
+    + cursor (number, optional) - Last ID that returned from list. Use this to retrieve next page items.
+        + Default: 0
+
 
 + Response 200 (application/json)
 
@@ -75,6 +81,13 @@ Rides API allows you to create rider and retrieve them.
                 "created": "2021-02-27 06:13:42"
             }
         ]
+        
++ Response 404   (application/json)
+
+        {
+            "error_code": "RIDES_NOT_FOUND_ERROR",
+            "message": "Could not find any rides"
+        }
         
 + Response 500 (application/json)
 

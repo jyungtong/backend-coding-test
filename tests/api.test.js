@@ -20,6 +20,22 @@ const mockRidePayload = {
   driver_vehicle: 'Tesla Model 3',
 };
 
+const mockResponse = {
+  startLat: 3.0468888401012952,
+  startLong: 101.70134502398477,
+  endLat: 3.047938771790838,
+  endLong: 101.68853469647756,
+  riderName: 'John Doe',
+  driverName: 'Bill Gates',
+  driverVehicle: 'Tesla Model 3',
+};
+
+function createRide(payload) {
+  return request(app)
+    .post('/rides')
+    .send(payload);
+}
+
 describe('API tests', () => {
   before((done) => {
     db.serialize((err) => {
@@ -183,29 +199,74 @@ describe('API tests', () => {
   });
 
   describe('GET /rides', () => {
-    it('should return list of rides', (done) => {
-      request(app)
-        .get('/rides')
-        .expect('Content-Type', /application\/json/)
-        .expect(200)
-        .then((response) => {
-          expect(response.body).to.shallowDeepEqual([
-            {
-              rideID: 1,
-              startLat: 3.0468888401012952,
-              startLong: 101.70134502398477,
-              endLat: 3.047938771790838,
-              endLong: 101.68853469647756,
-              riderName: 'John Doe',
-              driverName: 'Bill Gates',
-              driverVehicle: 'Tesla Model 3',
-            },
-          ]);
-          expect(response.body[0]).to.haveOwnProperty('created');
+    before(async () => {
+      await Promise.all([
+        createRide(mockRidePayload),
+        createRide(mockRidePayload),
+        createRide(mockRidePayload),
+        createRide(mockRidePayload),
+        createRide(mockRidePayload),
+      ]);
+    });
 
-          done();
-        })
-        .catch((err) => done(err));
+    describe('without cursor', () => {
+      it('should return list of first 3 rides', (done) => {
+        request(app)
+          .get('/rides')
+          .expect('Content-Type', /application\/json/)
+          .expect(200)
+          .then((response) => {
+            expect(response.body).to.shallowDeepEqual([
+              {
+                ...mockResponse,
+                rideID: 1,
+              },
+              {
+                ...mockResponse,
+                rideID: 2,
+              },
+              {
+                ...mockResponse,
+                rideID: 3,
+              },
+
+            ]);
+            expect(response.body[0]).to.haveOwnProperty('created');
+
+            done();
+          })
+          .catch((err) => done(err));
+      });
+    });
+
+    describe('with cursor=3', () => {
+      it('should return list of last 3 rides', (done) => {
+        request(app)
+          .get('/rides?cursor=3')
+          .expect('Content-Type', /application\/json/)
+          .expect(200)
+          .then((response) => {
+            expect(response.body).to.shallowDeepEqual([
+              {
+                ...mockResponse,
+                rideID: 4,
+              },
+              {
+                ...mockResponse,
+                rideID: 5,
+              },
+              {
+                ...mockResponse,
+                rideID: 6,
+              },
+
+            ]);
+            expect(response.body[0]).to.haveOwnProperty('created');
+
+            done();
+          })
+          .catch((err) => done(err));
+      });
     });
   });
 
@@ -219,14 +280,8 @@ describe('API tests', () => {
           .then((response) => {
             expect(response.body).to.shallowDeepEqual([
               {
+                ...mockResponse,
                 rideID: 1,
-                startLat: 3.0468888401012952,
-                startLong: 101.70134502398477,
-                endLat: 3.047938771790838,
-                endLong: 101.68853469647756,
-                riderName: 'John Doe',
-                driverName: 'Bill Gates',
-                driverVehicle: 'Tesla Model 3',
               },
             ]);
             expect(response.body[0]).to.haveOwnProperty('created');
