@@ -1,32 +1,260 @@
-'use strict';
-
+const chai = require('chai');
 const request = require('supertest');
 
 const sqlite3 = require('sqlite3').verbose();
-const db = new sqlite3.Database(':memory:');
 
+const db = new sqlite3.Database(':memory:');
 const app = require('../src/app')(db);
 const buildSchemas = require('../src/schemas');
+chai.use(require('chai-shallow-deep-equal'));
+
+const { expect } = chai;
+
+const mockRidePayload = {
+  start_lat: 3.0468888401012952,
+  start_long: 101.70134502398477,
+  end_lat: 3.047938771790838,
+  end_long: 101.68853469647756,
+  rider_name: 'John Doe',
+  driver_name: 'Bill Gates',
+  driver_vehicle: 'Tesla Model 3',
+};
 
 describe('API tests', () => {
-    before((done) => {
-        db.serialize((err) => { 
-            if (err) {
-                return done(err);
-            }
+  before((done) => {
+    db.serialize((err) => {
+      if (err) {
+        return done(err);
+      }
 
-            buildSchemas(db);
+      buildSchemas(db);
+
+      return done();
+    });
+  });
+
+  describe('GET /health', () => {
+    it('should return health', (done) => {
+      request(app)
+        .get('/health')
+        .expect('Content-Type', /text/)
+        .expect(200, done);
+    });
+  });
+
+  describe('POST /rides', () => {
+    describe('with valid payload', () => {
+      it('should create a new ride', (done) => {
+        request(app)
+          .post('/rides')
+          .send(mockRidePayload)
+          .expect('Content-Type', /application\/json/)
+          .expect(200)
+          .then((response) => {
+            expect(response.body[0]).to.shallowDeepEqual({
+              rideID: 1,
+              startLat: 3.0468888401012952,
+              startLong: 101.70134502398477,
+              endLat: 3.047938771790838,
+              endLong: 101.68853469647756,
+              riderName: 'John Doe',
+              driverName: 'Bill Gates',
+              driverVehicle: 'Tesla Model 3',
+            });
+            expect(response.body[0]).to.haveOwnProperty('created');
 
             done();
-        });
+          })
+          .catch((err) => done(err));
+      });
     });
 
-    describe('GET /health', () => {
-        it('should return health', (done) => {
-            request(app)
-                .get('/health')
-                .expect('Content-Type', /text/)
-                .expect(200, done);
+    describe('with invalid', () => {
+      describe('start_lat', () => {
+        it('should response with error', (done) => {
+          request(app)
+            .post('/rides')
+            .send({
+              ...mockRidePayload,
+              start_lat: -100,
+            })
+            .expect('Content-Type', /application\/json/)
+            .expect(200)
+            .then((response) => {
+              expect(response.body).to.shallowDeepEqual({
+                error_code: 'VALIDATION_ERROR',
+                message: 'Start latitude and longitude must be between -90 - 90 and -180 to 180 degrees respectively',
+              });
+
+              done();
+            })
+            .catch((err) => done(err));
         });
+      });
+
+      describe('end_lat', () => {
+        it('should response with error', (done) => {
+          request(app)
+            .post('/rides')
+            .send({
+              ...mockRidePayload,
+              end_lat: -100,
+            })
+            .expect('Content-Type', /application\/json/)
+            .expect(200)
+            .then((response) => {
+              expect(response.body).to.shallowDeepEqual({
+                error_code: 'VALIDATION_ERROR',
+                message: 'End latitude and longitude must be between -90 - 90 and -180 to 180 degrees respectively',
+              });
+
+              done();
+            })
+            .catch((err) => done(err));
+        });
+      });
+
+      describe('rider_name', () => {
+        it('should response with error', (done) => {
+          request(app)
+            .post('/rides')
+            .send({
+              ...mockRidePayload,
+              rider_name: undefined,
+            })
+            .expect('Content-Type', /application\/json/)
+            .expect(200)
+            .then((response) => {
+              expect(response.body).to.shallowDeepEqual({
+                error_code: 'VALIDATION_ERROR',
+                message: 'Rider name must be a non empty string',
+              });
+
+              done();
+            })
+            .catch((err) => done(err));
+        });
+      });
+
+      describe('driver_name', () => {
+        it('should response with error', (done) => {
+          request(app)
+            .post('/rides')
+            .send({
+              ...mockRidePayload,
+              driver_name: undefined,
+            })
+            .expect('Content-Type', /application\/json/)
+            .expect(200)
+            .then((response) => {
+              expect(response.body).to.shallowDeepEqual({
+                error_code: 'VALIDATION_ERROR',
+                message: 'Driver name must be a non empty string',
+              });
+
+              done();
+            })
+            .catch((err) => done(err));
+        });
+      });
+
+      describe('driver_vehicle', () => {
+        it('should response with error', (done) => {
+          request(app)
+            .post('/rides')
+            .send({
+              ...mockRidePayload,
+              driver_vehicle: undefined,
+            })
+            .expect('Content-Type', /application\/json/)
+            .expect(200)
+            .then((response) => {
+              expect(response.body).to.shallowDeepEqual({
+                error_code: 'VALIDATION_ERROR',
+                message: 'Driver vehicle must be a non empty string',
+              });
+
+              done();
+            })
+            .catch((err) => done(err));
+        });
+      });
     });
+  });
+
+  describe('GET /rides', () => {
+    it('should return list of rides', (done) => {
+      request(app)
+        .get('/rides')
+        .expect('Content-Type', /application\/json/)
+        .expect(200)
+        .then((response) => {
+          expect(response.body).to.shallowDeepEqual([
+            {
+              rideID: 1,
+              startLat: 3.0468888401012952,
+              startLong: 101.70134502398477,
+              endLat: 3.047938771790838,
+              endLong: 101.68853469647756,
+              riderName: 'John Doe',
+              driverName: 'Bill Gates',
+              driverVehicle: 'Tesla Model 3',
+            },
+          ]);
+          expect(response.body[0]).to.haveOwnProperty('created');
+
+          done();
+        })
+        .catch((err) => done(err));
+    });
+  });
+
+  describe('GET /rides/:id', () => {
+    describe('when ride is exists', () => {
+      it('should return the ride', (done) => {
+        request(app)
+          .get('/rides/1')
+          .expect('Content-Type', /application\/json/)
+          .expect(200)
+          .then((response) => {
+            expect(response.body).to.shallowDeepEqual([
+              {
+                rideID: 1,
+                startLat: 3.0468888401012952,
+                startLong: 101.70134502398477,
+                endLat: 3.047938771790838,
+                endLong: 101.68853469647756,
+                riderName: 'John Doe',
+                driverName: 'Bill Gates',
+                driverVehicle: 'Tesla Model 3',
+              },
+            ]);
+            expect(response.body[0]).to.haveOwnProperty('created');
+
+            done();
+          })
+          .catch((err) => done(err));
+      });
+    });
+
+    describe('when ride is not exists', () => {
+      it('should return not found', (done) => {
+        request(app)
+          .get('/rides/33')
+          .expect('Content-Type', /application\/json/)
+          .expect(200)
+          .then((response) => {
+            expect(response.body).to.shallowDeepEqual(
+              {
+                error_code: 'RIDES_NOT_FOUND_ERROR',
+                message: 'Could not find any rides',
+              },
+            );
+
+            done();
+          })
+          .catch((err) => done(err));
+      });
+    });
+  });
 });

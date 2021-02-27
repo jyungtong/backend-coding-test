@@ -36,5 +36,9 @@ module.exports = {
     // solve enum issue
     'no-shadow': 'off',
     '@typescript-eslint/no-shadow': ['error'],
+
+    // solve const showing loc undefined
+    indent: 'off',
+    '@typescript-eslint/indent': ['error', 2],
   },
 };
