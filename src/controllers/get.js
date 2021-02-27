@@ -3,7 +3,8 @@ const { getRides } = require('../lib/db-actions');
 
 const get = (db) => async (req, res) => {
   try {
-    const rides = await getRides(db, req.params.id);
+    const id = Number(req.params.id);
+    const rides = await getRides(db, id);
 
     if (rides.length === 0) {
       throw new Error('NO_RIDES_FOUND');
@@ -20,7 +21,7 @@ const get = (db) => async (req, res) => {
           message: 'Could not find any rides',
         });
       default:
-        return res.send({
+        return res.status(500).send({
           error_code: 'SERVER_ERROR',
           message: 'Unknown error',
         });
