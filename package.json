@@ -7,7 +7,8 @@
     "test": "tests"
   },
   "scripts": {
-    "test": "mocha tests",
+    "lint": "eslint ./src/**/* ./tests/**/*",
+    "test": "npm run lint && mocha tests",
     "start": "node index.js",
     "coverage": "nyc npm test",
     "postinstall": "husky install"
