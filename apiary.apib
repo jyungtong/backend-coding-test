@@ -33,13 +33,14 @@ Rides API allows you to create rider and retrieve them.
 
         [
             {
-                "start_lat": 3.0468888401012952,
-                "start_long": 101.70134502398477,
-                "end_lat": 3.047938771790838,
-                "end_long": 101.68853469647756,
-                "rider_name": "John Doe",
-                "driver_name": "Bill Gates",
-                "driver_vehicle": "Tesla Model 3"
+                "startLat": 3.0468888401012952,
+                "startLong": 101.70134502398477,
+                "endLat": 3.047938771790838,
+                "endLong": 101.68853469647756,
+                "riderName": "John Doe",
+                "driverName": "Bill Gates",
+                "driverVehicle": "Tesla Model 3",
+                "created": "2021-02-27 06:13:42"
             }
         ]
         
@@ -49,6 +50,13 @@ Rides API allows you to create rider and retrieve them.
             "error_code": "VALIDATION_ERROR",
             "message": "Rider name must be a non empty string"
         }
+        
++ Response 500 (application/json)
+
+        {
+            "error_code": "SERVER_ERROR",
+            "message": "Unknown error"
+        }
 
 
 ### List all rides [GET]
@@ -57,15 +65,24 @@ Rides API allows you to create rider and retrieve them.
 
         [
             {
-                "start_lat": 3.0468888401012952,
-                "start_long": 101.70134502398477,
-                "end_lat": 3.047938771790838,
-                "end_long": 101.68853469647756,
-                "rider_name": "John Doe",
-                "driver_name": "Bill Gates",
-                "driver_vehicle": "Tesla Model 3"
+                "startLat": 3.0468888401012952,
+                "startLong": 101.70134502398477,
+                "endLat": 3.047938771790838,
+                "endLong": 101.68853469647756,
+                "riderName": "John Doe",
+                "driverName": "Bill Gates",
+                "driverVehicle": "Tesla Model 3",
+                "created": "2021-02-27 06:13:42"
             }
         ]
+        
++ Response 500 (application/json)
+
+        {
+            "error_code": "SERVER_ERROR",
+            "message": "Unknown error"
+        }
+
 
 
 ### Retrieve a ride [GET /rides/{id}]
@@ -74,12 +91,28 @@ Rides API allows you to create rider and retrieve them.
 
         [
             {
-                "start_lat": 3.0468888401012952,
-                "start_long": 101.70134502398477,
-                "end_lat": 3.047938771790838,
-                "end_long": 101.68853469647756,
-                "rider_name": "John Doe",
-                "driver_name": "Bill Gates",
-                "driver_vehicle": "Tesla Model 3"
+                "startLat": 3.0468888401012952,
+                "startLong": 101.70134502398477,
+                "endLat": 3.047938771790838,
+                "endLong": 101.68853469647756,
+                "riderName": "John Doe",
+                "driverName": "Bill Gates",
+                "driverVehicle": "Tesla Model 3",
+                "created": "2021-02-27 06:13:42"
             }
         ]
+        
++ Response 404   (application/json)
+
+        {
+            "error_code": "RIDES_NOT_FOUND_ERROR",
+            "message": "Could not find any rides"
+        }
+
+        
++ Response 500 (application/json)
+
+        {
+            "error_code": "SERVER_ERROR",
+            "message": "Unknown error"
+        }
