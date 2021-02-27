@@ -1,11 +1,11 @@
 const chai = require('chai');
 const request = require('supertest');
-
 const sqlite3 = require('sqlite3').verbose();
+const buildSchemas = require('../src/schemas');
+const { cleanDb, resetIncrement } = require('../src/lib/db-actions');
 
 const db = new sqlite3.Database(':memory:');
 const app = require('../src/app')(db);
-const buildSchemas = require('../src/schemas');
 chai.use(require('chai-shallow-deep-equal'));
 
 const { expect } = chai;
@@ -65,7 +65,7 @@ describe('API tests', () => {
           .post('/rides')
           .send(mockRidePayload)
           .expect('Content-Type', /application\/json/)
-          .expect(200)
+          .expect(201)
           .then((response) => {
             expect(response.body[0]).to.shallowDeepEqual({
               rideID: 1,
@@ -95,7 +95,7 @@ describe('API tests', () => {
               start_lat: -100,
             })
             .expect('Content-Type', /application\/json/)
-            .expect(200)
+            .expect(400)
             .then((response) => {
               expect(response.body).to.shallowDeepEqual({
                 error_code: 'VALIDATION_ERROR',
@@ -117,7 +117,7 @@ describe('API tests', () => {
               end_lat: -100,
             })
             .expect('Content-Type', /application\/json/)
-            .expect(200)
+            .expect(400)
             .then((response) => {
               expect(response.body).to.shallowDeepEqual({
                 error_code: 'VALIDATION_ERROR',
@@ -139,7 +139,7 @@ describe('API tests', () => {
               rider_name: undefined,
             })
             .expect('Content-Type', /application\/json/)
-            .expect(200)
+            .expect(400)
             .then((response) => {
               expect(response.body).to.shallowDeepEqual({
                 error_code: 'VALIDATION_ERROR',
@@ -161,7 +161,7 @@ describe('API tests', () => {
               driver_name: undefined,
             })
             .expect('Content-Type', /application\/json/)
-            .expect(200)
+            .expect(400)
             .then((response) => {
               expect(response.body).to.shallowDeepEqual({
                 error_code: 'VALIDATION_ERROR',
@@ -183,7 +183,7 @@ describe('API tests', () => {
               driver_vehicle: undefined,
             })
             .expect('Content-Type', /application\/json/)
-            .expect(200)
+            .expect(400)
             .then((response) => {
               expect(response.body).to.shallowDeepEqual({
                 error_code: 'VALIDATION_ERROR',
@@ -199,73 +199,102 @@ describe('API tests', () => {
   });
 
   describe('GET /rides', () => {
-    before(async () => {
-      await Promise.all([
-        createRide(mockRidePayload),
-        createRide(mockRidePayload),
-        createRide(mockRidePayload),
-        createRide(mockRidePayload),
-        createRide(mockRidePayload),
-      ]);
-    });
+    describe('when db is empty', () => {
+      before(async () => {
+        await Promise.all([
+          cleanDb(db),
+          resetIncrement(db),
+        ]);
+      });
 
-    describe('without cursor', () => {
-      it('should return list of first 3 rides', (done) => {
+      it('should return not found', (done) => {
         request(app)
           .get('/rides')
           .expect('Content-Type', /application\/json/)
-          .expect(200)
+          .expect(404)
           .then((response) => {
-            expect(response.body).to.shallowDeepEqual([
+            expect(response.body).to.shallowDeepEqual(
               {
-                ...mockResponse,
-                rideID: 1,
+                error_code: 'RIDES_NOT_FOUND_ERROR',
+                message: 'Could not find any rides',
               },
-              {
-                ...mockResponse,
-                rideID: 2,
-              },
-              {
-                ...mockResponse,
-                rideID: 3,
-              },
+            );
 
-            ]);
-            expect(response.body[0]).to.haveOwnProperty('created');
-
-            done();
-          })
-          .catch((err) => done(err));
+            return done();
+          });
       });
     });
 
-    describe('with cursor=3', () => {
-      it('should return list of last 3 rides', (done) => {
-        request(app)
-          .get('/rides?cursor=3')
-          .expect('Content-Type', /application\/json/)
-          .expect(200)
-          .then((response) => {
-            expect(response.body).to.shallowDeepEqual([
-              {
-                ...mockResponse,
-                rideID: 4,
-              },
-              {
-                ...mockResponse,
-                rideID: 5,
-              },
-              {
-                ...mockResponse,
-                rideID: 6,
-              },
+    describe('when db has data', () => {
+      before(async () => {
+        await Promise.all([
+          createRide(mockRidePayload),
+          createRide(mockRidePayload),
+          createRide(mockRidePayload),
+          createRide(mockRidePayload),
+          createRide(mockRidePayload),
+          createRide(mockRidePayload),
+        ]);
+      });
 
-            ]);
-            expect(response.body[0]).to.haveOwnProperty('created');
+      describe('without cursor', () => {
+        it('should return list of first 3 rides', (done) => {
+          request(app)
+            .get('/rides')
+            .expect('Content-Type', /application\/json/)
+            .expect(200)
+            .then((response) => {
+              expect(response.body).to.shallowDeepEqual([
+                {
+                  ...mockResponse,
+                  rideID: 1,
+                },
+                {
+                  ...mockResponse,
+                  rideID: 2,
+                },
+                {
+                  ...mockResponse,
+                  rideID: 3,
+                },
 
-            done();
-          })
-          .catch((err) => done(err));
+              ]);
+              expect(response.body[0]).to.haveOwnProperty('created');
+
+              done();
+            })
+            .catch((err) => done(err));
+        });
+      });
+
+      describe('with cursor=3', () => {
+        it('should return list of last 3 rides', (done) => {
+          request(app)
+            .get('/rides?cursor=3')
+            .expect('Content-Type', /application\/json/)
+            .expect(200)
+            .then((response) => {
+              expect(response.body).to.shallowDeepEqual([
+                {
+                  ...mockResponse,
+                  rideID: 4,
+                },
+                {
+                  ...mockResponse,
+                  rideID: 5,
+                },
+                {
+                  ...mockResponse,
+                  rideID: 6,
+                },
+
+              ]);
+              expect(response.body[0]).to.haveOwnProperty('created');
+
+              done();
+            })
+            .catch((err) => done(err));
+        });
       });
     });
   });
@@ -297,7 +326,7 @@ describe('API tests', () => {
         request(app)
           .get('/rides/33')
           .expect('Content-Type', /application\/json/)
-          .expect(200)
+          .expect(404)
           .then((response) => {
             expect(response.body).to.shallowDeepEqual(
               {
