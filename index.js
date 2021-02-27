@@ -9,7 +9,7 @@ const db = new sqlite3.Database(':memory:');
 db.serialize(() => {
   buildSchemas(db);
 
-  const server = app();
+  const server = app(db);
 
   server.listen(port, () => logger.info(`App started and listening on port ${port}`));
 });
