@@ -5,7 +5,7 @@ const get = (db) => async (req, res) => {
   const { cursor = 0 } = req.query;
 
   try {
-    const rides = await listRides(db, cursor);
+    const rides = await listRides(db, Number(cursor));
 
     if (rides.length === 0) {
       throw new Error('NO_RIDES_FOUND');
@@ -22,7 +22,7 @@ const get = (db) => async (req, res) => {
           message: 'Could not find any rides',
         });
       default:
-        return res.send({
+        return res.status(500).send({
           error_code: 'SERVER_ERROR',
           message: 'Unknown error',
         });

@@ -296,6 +296,24 @@ describe('API tests', () => {
             .catch((err) => done(err));
         });
       });
+
+      describe('with malicious code passed in', () => {
+        it('should return error', (done) => {
+          request(app)
+            .get('/rides?cursor=0;DROP TABLE Rides;')
+            .expect('Content-Type', /application\/json/)
+            .expect(500)
+            .then((response) => {
+              expect(response.body).to.shallowDeepEqual({
+                error_code: 'SERVER_ERROR',
+                message: 'Unknown error',
+              });
+
+              done();
+            })
+            .catch((err) => done(err));
+        });
+      });
     });
   });
 
@@ -325,6 +343,26 @@ describe('API tests', () => {
       it('should return not found', (done) => {
         request(app)
           .get('/rides/33')
+          .expect('Content-Type', /application\/json/)
+          .expect(404)
+          .then((response) => {
+            expect(response.body).to.shallowDeepEqual(
+              {
+                error_code: 'RIDES_NOT_FOUND_ERROR',
+                message: 'Could not find any rides',
+              },
+            );
+
+            done();
+          })
+          .catch((err) => done(err));
+      });
+    });
+
+    describe('when malicious code is passed in', () => {
+      it('should return not found error', (done) => {
+        request(app)
+          .get('/rides/1;DROP TABLE Rides;')
           .expect('Content-Type', /application\/json/)
           .expect(404)
           .then((response) => {
