@@ -12,3 +12,11 @@
 ## API Docs
 
 Visit https://jinyungbackendcodingtest.docs.apiary.io/
+
+## Load Tests
+
+Run `npm run test:load`
+
+Results:
+
+![Load test](/images/load-test.png)
